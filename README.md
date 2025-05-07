@@ -1,7 +1,7 @@
 # LP-5
 Practical Lab Sem-8 (SPPU Fourth Year Computer Engineering)
 
-# HPC Assignment  (using OpenMP)
+
 
 ##  Compile and Run OpenMp in VS Code (Linux/GCC):
 
