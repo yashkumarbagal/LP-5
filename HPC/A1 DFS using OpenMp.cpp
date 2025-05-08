@@ -1,16 +1,13 @@
 // Assignment 1b - Sequential and Parallel DFS using OpenMP
-
 #include <iostream>
 #include <vector>
-#include <omp.h> // OpenMP library
 
 using namespace std;
 
 const int MAX = 100000;
-vector<int> graph[MAX]; // Adjacency list
-bool visited[MAX];      // Shared visited array for both DFS
+vector<int> graph[MAX];
+bool visited[MAX];
 
-// Sequential DFS function
 void sequentialDFS(int node) {
     visited[node] = true;
     cout << node << " ";
@@ -23,34 +20,8 @@ void sequentialDFS(int node) {
     }
 }
 
-// Parallel DFS function using OpenMP
-void parallelDFS(int node) {
-    bool skip = false;
-
-    #pragma omp critical
-    {
-        if (visited[node])
-            skip = true;
-        else {
-            visited[node] = true;
-            cout << node << " ";
-        }
-    }
-
-    if (skip) return;
-
-    #pragma omp parallel for
-    for (int i = 0; i < graph[node].size(); i++) {
-        int adj_node = graph[node][i];
-        if (!visited[adj_node]) {
-            parallelDFS(adj_node);
-        }
-    }
-}
-
-
 int main() {
-    int n, m, start_node, choice;
+    int n, m, start_node;
 
     cout << "Enter No of Nodes, Edges, and Start Node: ";
     cin >> n >> m >> start_node;
@@ -60,32 +31,15 @@ int main() {
         int u, v;
         cin >> u >> v;
         graph[u].push_back(v);
-        graph[v].push_back(u); // Undirected graph
+        graph[v].push_back(u);
     }
 
-    cout << "\nChoose Traversal Method:\n";
-    cout << "1. Sequential DFS\n";
-    cout << "2. Parallel DFS\n";
-    cout << "Enter your choice: ";
-    cin >> choice;
+    for (int i = 0; i < n; i++) visited[i] = false;
 
-    // Initialize visited array
-    #pragma omp parallel for
-    for (int i = 0; i < n; i++) {
-        visited[i] = false;
-    }
-
-    if (choice == 1) {
-        cout << "Sequential DFS Traversal: ";
-        sequentialDFS(start_node);
-    } else if (choice == 2) {
-        cout << "Parallel DFS Traversal: ";
-        parallelDFS(start_node);
-    } else {
-        cout << "Invalid choice!" << endl;
-    }
-
+    cout << "Correct DFS Traversal: ";
+    sequentialDFS(start_node);
     cout << endl;
+
     return 0;
 }
 
