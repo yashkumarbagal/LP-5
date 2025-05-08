@@ -1,85 +1,111 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <omp.h>
-#include <limits>
+#include <iomanip>  // for setprecision
+
 using namespace std;
 
-// Sequential computation of min, max, sum, and average
-void compute_sequential(int* arr, int n) {
-    int min_val = INT_MAX;
-    int max_val = INT_MIN;
-    long long sum = 0;
+void calculate_min_max_avg_sequential(int *a, int n, int &min, int &max, double &avg)
+{
+    min = a[0];
+    max = a[0];
+    double sum = 0;
 
-    for (int i = 0; i < n; i++) {
-        if (arr[i] < min_val) min_val = arr[i];
-        if (arr[i] > max_val) max_val = arr[i];
-        sum += arr[i];
+    // Sequential calculation for min, max, and sum
+    for (int i = 0; i < n; i++)
+    {
+        if (a[i] < min)
+            min = a[i];
+        if (a[i] > max)
+            max = a[i];
+        sum += a[i];
     }
 
-    double avg = static_cast<double>(sum) / n;
-
-    cout << "\n--- Sequential Output ---\n";
-    cout << "Minimum: " << min_val << endl;
-    cout << "Maximum: " << max_val << endl;
-    cout << "Sum: " << sum << endl;
-    cout << "Average: " << avg << endl;
+    avg = sum / n;
 }
 
-// Parallel computation using OpenMP reduction
-void compute_parallel(int* arr, int n) {
-    int min_val = INT_MAX;
-    int max_val = INT_MIN;
-    long long sum = 0;
+void calculate_min_max_avg_parallel(int *a, int n, int &min, int &max, double &avg)
+{
+    min = a[0];
+    max = a[0];
+    double sum = 0;
 
-    // Parallel loop with reduction for min, max, and sum
-    #pragma omp parallel for reduction(min:min_val) reduction(max:max_val) reduction(+:sum)
-    for (int i = 0; i < n; ++i) {
-        if (arr[i] < min_val) min_val = arr[i];
-        if (arr[i] > max_val) max_val = arr[i];
-        sum += arr[i];
+    // Parallel calculation for min, max, and sum
+    #pragma omp parallel for reduction(min: min) reduction(max: max) reduction(+: sum)
+    for (int i = 0; i < n; i++)
+    {
+        if (a[i] < min)
+            min = a[i];
+        if (a[i] > max)
+            max = a[i];
+        sum += a[i];
     }
 
-    double avg = static_cast<double>(sum) / n;
-
-    cout << "\n--- Parallel Output ---\n";
-    cout << "Minimum: " << min_val << endl;
-    cout << "Maximum: " << max_val << endl;
-    cout << "Sum: " << sum << endl;
-    cout << "Average: " << avg << endl;
+    avg = sum / n;
 }
 
-int main() {
-    int n, choice;
-    cout << "Enter number of elements: ";
-    cin >> n;
+void print_array(int *a, int n)
+{
+    cout << "\nArray elements: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << endl;
+}
 
-    int* arr = new int[n];
-    cout << "Enter " << n << " elements:\n";
-    for (int i = 0; i < n; ++i)
-        cin >> arr[i];
+int main()
+{
+    int *a, n, choice, min, max;
+    double avg;
 
-    // Menu to choose execution method
-    cout << "\nChoose execution type:";
-    cout << "\n1. Sequential";
-    cout << "\n2. Parallel (OpenMP)";
-    cout << "\n3. Exit";
+    cout << "\nChoose the method for calculation: ";
+    cout << "\n1. Sequential Calculation (Min, Max, Avg)";
+    cout << "\n2. Parallel Calculation (Min, Max, Avg)";
     cout << "\nEnter your choice: ";
     cin >> choice;
 
-    switch (choice) {
-        case 1:
-            compute_sequential(arr, n);
-            break;
-        case 2:
-            compute_parallel(arr, n);
-            break;
-        case 3:
-            cout << "Exiting the program..." << endl;
-            break;
-        default:
-            cout << "Invalid choice!" << endl;
+    if (choice == 1 || choice == 2)
+    {
+        cout << "\nEnter total number of elements: ";
+        cin >> n;
+
+        a = new int[n];
+
+        // Generate random array
+        srand(time(0));
+        for (int i = 0; i < n; i++)
+            a[i] = rand() % 1000; // Random values between 0 and 999
+
+        // Print the array elements
+        print_array(a, n);
+
+        // Start the timer using OpenMP high precision timer
+        double start_time = omp_get_wtime();
+
+        // Call the appropriate function based on user choice
+        if (choice == 1)
+            calculate_min_max_avg_sequential(a, n, min, max, avg);
+        else
+            calculate_min_max_avg_parallel(a, n, min, max, avg);
+
+        // Stop the timer
+        double end_time = omp_get_wtime();
+
+        // Calculate time in microseconds
+        double time_microsec = (end_time - start_time) * 1e6;
+
+        // Output the results
+        cout << "\nMinimum value: " << min;
+        cout << "\nMaximum value: " << max;
+        cout << "\nAverage value: " << fixed << setprecision(2) << avg;
+        cout << "\nExecution time: " << time_microsec << " microseconds" << endl;
+
+        delete[] a;
+    }
+    else
+    {
+        cout << "Invalid choice! Exiting program..." << endl;
     }
 
-    delete[] arr;
     return 0;
 }
-
