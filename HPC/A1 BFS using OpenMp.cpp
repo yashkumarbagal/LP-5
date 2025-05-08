@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <omp.h>
+#include <iomanip>  // for setprecision
 
 using namespace std;
 
@@ -56,17 +57,24 @@ int main() {
         graph[v].push_back(u);
     }
 
+    // Initialize visited array in parallel using OpenMP
     #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         visited[i] = false;
     }
 
+    // Start timing the parallel BFS
+    double start_time = omp_get_wtime();
+
     parallelBFS(start_node);
+
+    // End timing the parallel BFS
+    double end_time = omp_get_wtime();
+
+    // Calculate time in milliseconds
+    double time_ms = (end_time - start_time) * 1000;
+
+    cout << "Execution time: " << fixed << setprecision(6) << time_ms << " milliseconds" << endl;
 
     return 0;
 }
-
-
-// g++ -fopenmp openmp_example.cpp -o openmp_example
-// ./openmp_example
-// openmp_example.exe
